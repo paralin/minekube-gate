@@ -344,7 +344,9 @@ func (l *loginSessionHandler) connectToInitialServer(player *connectedPlayer) {
 			player.log.Info("starting with empty server")
 
 			// set the play session handler
-			player.setSessionHandler(newClientPlaySessionHandler(player))
+			handler := newClientPlaySessionHandler(player)
+			player.setSessionHandler(handler)
+			_ = handler.spawned.CAS(false, true)
 
 			// spoof a join game packet to stop the loading screen
 			if chooseServer.SpoofJoinSeq() {
