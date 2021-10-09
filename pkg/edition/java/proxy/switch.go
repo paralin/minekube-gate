@@ -310,13 +310,33 @@ func (p *connectedPlayer) handleDisconnectWithReason(server RegisteredServer, re
 	log := p.log.WithValues("server", server.ServerInfo().Name(), "reason", plainReason)
 
 	connected := p.connectedServer()
-	if connected != nil && connected.server.ServerInfo().Equals(server.ServerInfo()) {
+	if connected != nil {
 		log.Info("Player was kicked from server")
-		p.handleConnectionErr2(server, reason, &Text{
-			Content: movedToNewServer.Content,
-			S:       movedToNewServer.S,
-			Extra:   []Component{reason},
-		}, safe)
+	}
+
+	if p.config().AllowNoServer {
+		if p.connectedServer_ != nil {
+			p.connectedServer_.disconnect0()
+			p.connectedServer_ = nil
+		}
+		if p.connInFlight != nil {
+			p.connInFlight.disconnect0()
+			p.connInFlight = nil
+		}
+		p.setSessionHandler(newInitialConnectSessionHandler(p))
+		lss := newLoginSessionHandler(p.minecraftConn, nil).(*loginSessionHandler)
+		go lss.connectToInitialServer(p)
+		// p.setupSpoofServer(true)
+	}
+
+	if connected != nil && connected.server.ServerInfo().Equals(server.ServerInfo()) {
+		if !p.config().AllowNoServer {
+			p.handleConnectionErr2(server, reason, &Text{
+				Content: movedToNewServer.Content,
+				S:       movedToNewServer.S,
+				Extra:   []Component{reason},
+			}, safe)
+		}
 		return
 	}
 

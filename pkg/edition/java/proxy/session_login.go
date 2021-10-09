@@ -327,23 +327,7 @@ func (l *loginSessionHandler) connectToInitialServer(player *connectedPlayer) {
 		if !l.config().AllowNoServer {
 			player.Disconnect(noAvailableServers) // Will call disconnected() in InitialConnectSessionHandler
 		} else {
-			player.log.Info("starting with empty server")
-
-			// set the play session handler
-			handler := newClientPlaySessionHandler(player)
-			player.setSessionHandler(handler)
-			_ = handler.spawned.CAS(false, true)
-
-			// spoof a join game packet to stop the loading screen
-			if chooseServer.SpoofJoinSeq() {
-				// send the "position and look" to close the "downloading terrain"
-				for _, pkt := range packet.SpoofPostLoginSequence() {
-					if err := player.WritePacket(pkt); err != nil {
-						player.log.Error(err, "unable to write spoofed post-login sequence")
-					}
-				}
-			}
-
+			player.setupSpoofServer(chooseServer.SpoofJoinSeq())
 			l.event().Fire(&PlayerJoinedWithoutServer{player: player})
 		}
 		return
