@@ -4,6 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"net"
+	"time"
+
 	"go.minekube.com/common/minecraft/color"
 	"go.minekube.com/common/minecraft/component"
 	"go.minekube.com/gate/pkg/edition/java/auth"
@@ -16,8 +19,6 @@ import (
 	"go.minekube.com/gate/pkg/runtime/event"
 	"go.minekube.com/gate/pkg/runtime/logr"
 	"go.minekube.com/gate/pkg/util/uuid"
-	"net"
-	"time"
 )
 
 type loginSessionHandler struct {
@@ -46,6 +47,8 @@ func (l *loginSessionHandler) handlePacket(p *proto.PacketContext) {
 		l.handleServerLogin(t)
 	case *packet.EncryptionResponse:
 		l.handleEncryptionResponse(t)
+	case *packet.KeepAlive:
+		l.handleKeepAlive(t)
 	default:
 		// got unexpected packet, simple close
 		_ = l.conn.close()
@@ -181,6 +184,10 @@ func (l *loginSessionHandler) handleEncryptionResponse(resp *packet.EncryptionRe
 
 	// All went well, initialize the session.
 	l.initPlayer(gameProfile, true)
+}
+
+func (l *loginSessionHandler) handleKeepAlive(p *packet.KeepAlive) {
+	_ = l.conn.WritePacket(p)
 }
 
 var (
@@ -321,6 +328,21 @@ func (l *loginSessionHandler) connectToInitialServer(player *connectedPlayer) {
 			player.Disconnect(noAvailableServers) // Will call disconnected() in InitialConnectSessionHandler
 		} else {
 			player.log.Info("starting with empty server")
+
+			// set the play session handler
+			player.setSessionHandler(newClientPlaySessionHandler(player))
+
+			// spoof a join game packet to stop the loading screen
+			if chooseServer.SpoofJoinSeq() {
+				// send the "position and look" to close the "downloading terrain"
+				for _, pkt := range packet.SpoofPostLoginSequence() {
+					if err := player.WritePacket(pkt); err != nil {
+						player.log.Error(err, "unable to write spoofed post-login sequence")
+					}
+				}
+			}
+
+			l.event().Fire(&PlayerJoinedWithoutServer{player: player})
 		}
 		return
 	}
