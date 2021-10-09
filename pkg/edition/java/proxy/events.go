@@ -343,6 +343,7 @@ func (e *PostLoginEvent) Player() Player {
 type PlayerChooseInitialServerEvent struct {
 	player        Player
 	initialServer RegisteredServer // May be nil if no server is configured.
+	spoofJoinSeq  bool             // If set, send packets imitating a real server join
 }
 
 // Player returns the player to find the initial server for.
@@ -358,6 +359,33 @@ func (e *PlayerChooseInitialServerEvent) InitialServer() RegisteredServer {
 // SetInitialServer sets the initial server for the player.
 func (e *PlayerChooseInitialServerEvent) SetInitialServer(server RegisteredServer) {
 	e.initialServer = server
+}
+
+// SpoofJoinSeq indicates we should spoof the join sequence if initial server is nil.
+func (e *PlayerChooseInitialServerEvent) SpoofJoinSeq() bool {
+	return e.spoofJoinSeq
+}
+
+// SetSpoofJoinSeq sets if we should spoof the join sequence or not when initial server is nil.
+func (e *PlayerChooseInitialServerEvent) SetSpoofJoinSeq(seq bool) {
+	e.spoofJoinSeq = seq
+}
+
+//
+//
+//
+//
+//
+//
+
+// PlayerJoinedWithoutServer is fired when the server is nil and the player entered playing state.
+type PlayerJoinedWithoutServer struct {
+	player Player
+}
+
+// Player returns the player to find the initial server for.
+func (e *PlayerJoinedWithoutServer) Player() Player {
+	return e.player
 }
 
 //
