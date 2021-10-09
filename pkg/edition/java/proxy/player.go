@@ -52,6 +52,11 @@ type Player interface {
 	// Disconnect disconnects the player with a reason.
 	// Once called, further interface calls to this player become undefined.
 	Disconnect(reason component.Component)
+	// WritePacket writes a packet to the connection's write buffer and flushes
+	// the complete buffer afterwards.
+	//
+	// The connection will be closed on any error encountered!
+	WritePacket(p proto.Packet) error
 	// SpoofChatInput sends chats input onto the player's current server as if
 	// they typed it into the client chat box.
 	SpoofChatInput(input string) error
