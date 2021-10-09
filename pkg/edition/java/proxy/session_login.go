@@ -326,7 +326,11 @@ func (l *loginSessionHandler) connectToInitialServer(player *connectedPlayer) {
 	}
 	l.event().Fire(chooseServer)
 	if chooseServer.InitialServer() == nil {
-		player.Disconnect(noAvailableServers) // Will call disconnected() in InitialConnectSessionHandler
+		if !l.config().AllowNoServer {
+			player.Disconnect(noAvailableServers) // Will call disconnected() in InitialConnectSessionHandler
+		} else {
+			player.log.Info("starting with empty server")
+		}
 		return
 	}
 	ctx, cancel := withConnectionTimeout(context.Background(), l.config())

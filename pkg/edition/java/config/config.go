@@ -79,6 +79,7 @@ type Config struct {
 	Try                                  []string          // Try server names order
 	ForcedHosts                          ForcedHosts
 	FailoverOnUnexpectedServerDisconnect bool
+	AllowNoServer                        bool // Allow joining /no/ server
 
 	ConnectionTimeout int // Write timeout
 	ReadTimeout       int
