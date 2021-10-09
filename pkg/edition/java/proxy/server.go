@@ -154,6 +154,11 @@ func newRegisteredServer(info ServerInfo) *registeredServer {
 	return &registeredServer{info: info, players: newPlayers()}
 }
 
+// NewRegisteredServer constructs a new registered server.
+func NewRegisteredServer(info ServerInfo) RegisteredServer {
+	return newRegisteredServer(info)
+}
+
 func (r *registeredServer) Equals(o RegisteredServer) bool {
 	return r == nil && o == nil || (r != nil && o != nil &&
 		r.ServerInfo().Equals(o.ServerInfo()))
