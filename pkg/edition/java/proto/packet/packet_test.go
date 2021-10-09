@@ -71,6 +71,8 @@ var packets = []proto.Packet{
 		Z: -5,
 	},
 	&Respawn{},
+	// NOTE: cannot add here until NBTs are converted to normal vars
+	// 	&ChunkData{},
 	&StatusRequest{},
 	&StatusResponse{},
 	&StatusPing{},
