@@ -482,6 +482,28 @@ func (p *connectedPlayer) setConnectedServer(conn *serverConnection) {
 	p.mu.Unlock()
 }
 
+// setupSpoofServer sets up the spoofed session for the user with no server.
+func (p *connectedPlayer) setupSpoofServer(spoofJoinSeq bool) error {
+	p.log.Info("starting with empty server")
+	// set the play session handler
+	handler := newClientPlaySessionHandler(p)
+	p.setSessionHandler(handler)
+	_ = handler.spawned.CAS(false, true)
+
+	// spoof a join game packet to stop the loading screen
+	if spoofJoinSeq {
+		// send the "position and look" to close the "downloading terrain"
+		for _, pkt := range packet.SpoofPostLoginSequence() {
+			if err := p.WritePacket(pkt); err != nil {
+				p.log.Error(err, "unable to write spoofed server join sequence")
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 func (p *connectedPlayer) setSettings(settings *packet.ClientSettings) {
 	wrapped := player.NewSettings(settings)
 	p.mu.Lock()
