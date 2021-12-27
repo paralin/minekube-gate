@@ -7,6 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"net"
+	"strings"
+	"sync"
+	"time"
+
 	"go.minekube.com/common/minecraft/component"
 	"go.minekube.com/common/minecraft/component/codec/legacy"
 	"go.minekube.com/gate/pkg/command"
@@ -19,15 +24,12 @@ import (
 	"go.minekube.com/gate/pkg/edition/java/proto/version"
 	"go.minekube.com/gate/pkg/edition/java/proxy/message"
 	"go.minekube.com/gate/pkg/edition/java/proxy/player"
+	"go.minekube.com/gate/pkg/gate/proto"
 	"go.minekube.com/gate/pkg/runtime/logr"
 	"go.minekube.com/gate/pkg/util/permission"
 	"go.minekube.com/gate/pkg/util/sets"
 	"go.minekube.com/gate/pkg/util/uuid"
 	"go.uber.org/atomic"
-	"net"
-	"strings"
-	"sync"
-	"time"
 )
 
 // Player is a connected Minecraft player.
